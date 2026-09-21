@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#f4f5f7</color>
+    <color name="card">#ffffff</color>
+    <color name="text">#1c2430</color>
+    <color name="muted">#8a94a3</color>
+    <color name="line">#e6e9ee</color>
+    <color name="blue">#2f6bff</color>
+    <color name="green">#12a66a</color>
+    <color name="red">#e5484d</color>
+    <color name="tab_inactive">#6b7480</color>
+    <color name="input_bg">#fafbfc</color>
+    <color name="usage_text">#0b7a4b</color>
+    <color name="empty_text">#b3bac5</color>
+</resources>
