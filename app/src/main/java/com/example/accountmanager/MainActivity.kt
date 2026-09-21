@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shareStatus: TextView
     private lateinit var clearBtn: TextView
     private lateinit var buyBtn: TextView
+    private lateinit var logoutBtn: TextView
     private lateinit var parseBtn: TextView
     private lateinit var fileBtn: TextView
     private lateinit var emptyView: TextView
@@ -89,6 +90,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        storage = Storage(this)
+        ShareApi.baseUrl = storage.getServerUrl()
+        ShareApi.token = storage.token()
+        if (!storage.isLoggedIn()) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
         source = findViewById(R.id.source)
         statusEl = findViewById(R.id.statusEl)
         listTitle = findViewById(R.id.listTitle)
@@ -100,14 +110,13 @@ class MainActivity : AppCompatActivity() {
         shareStatus = findViewById(R.id.shareStatus)
         clearBtn = findViewById(R.id.clearBtn)
         buyBtn = findViewById(R.id.buyBtn)
+        logoutBtn = findViewById(R.id.logoutBtn)
         parseBtn = findViewById(R.id.parseBtn)
         fileBtn = findViewById(R.id.fileBtn)
         emptyView = findViewById(R.id.emptyView)
         recycler = findViewById(R.id.list)
         dateBar = findViewById(R.id.dateBar)
 
-        storage = Storage(this)
-        ShareApi.baseUrl = storage.getServerUrl()
         adapter = AccountAdapter(::copyAccount, ::deleteAccount)
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
@@ -117,6 +126,7 @@ class MainActivity : AppCompatActivity() {
         fileBtn.setOnClickListener { getFile.launch("*/*") }
         clearBtn.setOnClickListener { confirmClear() }
         buyBtn.setOnClickListener { startActivity(Intent(this, PurchaseActivity::class.java)) }
+        logoutBtn.setOnClickListener { doLogout() }
         tabLocal.setOnClickListener { switchTab(TAB_LOCAL) }
         tabShared.setOnClickListener { switchTab(TAB_SHARED) }
         shareStatus.setOnClickListener {
@@ -605,6 +615,13 @@ class MainActivity : AppCompatActivity() {
                 else -> Color.parseColor("#8a94a3")
             }
         )
+    }
+
+    private fun doLogout() {
+        storage.clearAuth()
+        ShareApi.token = ""
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
     }
 
     private fun toast(msg: String) {

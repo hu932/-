@@ -52,21 +52,31 @@ AccountManager/
 > 说明：
 > - `gradle/wrapper/gradle-wrapper.jar` 为二进制文件未包含在源码中，Android Studio 首次打开会自动生成；也可在项目根目录执行 `gradle wrapper` 生成。
 > - 共享接口为明文 HTTP，已在 Manifest 中开启 `usesCleartextTraffic`。
-> - 接口地址默认 `http://103.146.231.72:2525/accounts_api.php`，也可在 App 里**长按顶部同步状态**修改（或改 `ShareApi.kt` 的 `DEFAULT_URL`）。无需密码。
+> - 接口地址默认 `http://103.146.231.72:2525/accounts_api.php`，也可在登录页/主界面**点接口地址或长按顶部同步状态**修改（或改 `ShareApi.kt` 的 `DEFAULT_URL`）。
+
+## 注册 / 登录（账号数据隔离）
+
+- 首次打开进入登录页，输入用户名 + 密码点「注册并登录」即可建号。
+- 之后「登录」返回；每个用户名在服务器和本地都是**独立的一套数据**，互不干扰。
+- 主界面右上角「退出」可切换账号。
 
 ## 后端接口（server/accounts_api.php）
 
-把 `server/accounts_api.php` 上传到你的 PHP 服务器，数据自动存到同目录 `accounts_data.json`（无需数据库）。支持以下 `act`：
+把 `server/accounts_api.php` 上传到你的 PHP 服务器（**需重新部署**），数据自动存到同目录 `users.json` 和 `accounts_data.json`（无需数据库）。支持以下 `act`：
 
 | act | 入参 | 说明 |
 | --- | --- | --- |
-| `list` | - | 拉取全部账号 |
-| `sync` | `{accounts:[...], removed:[...]}` | 合并（按 uid/id 去重）、删除并返回权威列表 |
-| `clear` | - | 清空全部 |
-| `mark_used` | `{key:"u:xxx"|"i:xxx"}` | 记录一次使用（usedAt + usage 历史） |
-| `dates` | - | 按创建日期统计数量 |
+| `register` | `{username, password}` | 注册，返回 `{username, token}` |
+| `login` | `{username, password}` | 登录，返回 `{username, token}` |
+| `list` | `token` | 拉取当前用户全部账号 |
+| `sync` | `token, {accounts:[...], removed:[...]}` | 合并、删除并返回当前用户权威列表 |
+| `clear` | `token` | 清空当前用户账号 |
+| `mark_used` | `token, {key}` | 记录一次使用 |
+| `dates` | `token` | 按创建日期统计当前用户账号数量 |
 
-返回统一格式：`{"ok":true,"data":[...],"msg":"","updated_at":"Y-m-d H:i:s"}`。
+除 `register` / `login` 外，其余接口都要在 body 里带 `token`。
+
+返回统一格式：`{"ok":true,"data":...,"msg":"","updated_at":"Y-m-d H:i:s"}`。
 
 ## 数据格式约定
 

@@ -15,9 +15,13 @@ object ShareApi {
 
     var baseUrl: String = DEFAULT_URL
 
+    /** 登录后由 LoginActivity / MainActivity 写入，数据接口请求会自动带上。 */
+    var token: String = ""
+
     class ApiException(message: String, val timeout: Boolean = false) : Exception(message)
 
     fun call(body: JSONObject, timeoutMs: Int = 20000): JSONObject {
+        if (token.isNotEmpty()) body.put("token", token)
         var conn: HttpURLConnection? = null
         return try {
             conn = URL(baseUrl).openConnection() as HttpURLConnection
