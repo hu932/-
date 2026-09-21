@@ -46,21 +46,25 @@ function save_users($users) {
     return write_json($usersFile, ['users' => $users]);
 }
 
-function is_list_array($a) {
-    if (!is_array($a)) return false;
-    if (empty($a)) return true;
-    return array_keys($a) === range(0, count($a) - 1);
-}
-
-/** 返回 ['map'=>username=>[账号], 'legacy'=>旧版扁平账号列表] */
+/**
+ * 返回 ['map'=>username=>[账号], 'legacy'=>旧版扁平账号列表]。
+ * 兼容三种情况：纯旧版扁平列表、纯新版用户表、以及两者混合（已有用户同步过）。
+ * 数字键 -> 旧版扁平账号；字符串键 -> 用户名下的账号列表。
+ */
 function load_accounts() {
     global $dataFile;
     $d = read_json($dataFile, []);
     $accounts = isset($d['accounts']) && is_array($d['accounts']) ? $d['accounts'] : [];
-    if (is_list_array($accounts)) {
-        return ['map' => [], 'legacy' => $accounts];
+    $map = [];
+    $legacy = [];
+    foreach ($accounts as $k => $v) {
+        if (is_int($k) || (is_string($k) && ctype_digit($k))) {
+            if (is_array($v)) $legacy[] = $v; // 旧版扁平账号（每个 v 是一个账号）
+        } else {
+            $map[$k] = $v; // 用户名 -> 账号列表
+        }
     }
-    return ['map' => $accounts, 'legacy' => []];
+    return ['map' => $map, 'legacy' => $legacy];
 }
 
 function save_map($map) {
