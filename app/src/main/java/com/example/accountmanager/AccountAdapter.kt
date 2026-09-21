@@ -60,7 +60,10 @@ class AccountAdapter(
     fun updateTimer(holder: VH, r: Account) {
         val used = r.usedAt
         if (used != null) {
+            holder.usage.visibility = View.VISIBLE
             holder.timer.text = fmtDur(System.currentTimeMillis() - used)
+        } else {
+            holder.usage.visibility = View.GONE
         }
     }
 

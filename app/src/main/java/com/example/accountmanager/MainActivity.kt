@@ -373,12 +373,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 runOnUiThread {
-                    val before = sig()
                     adoptShared(list)
-                    if (sig() != before) {
-                        saveAll()
-                        if (tab == TAB_SHARED) render()
-                    }
+                    saveAll()
+                    if (tab == TAB_SHARED) render()
                     setShare("ok", "已同步 " + timeLabel(r.optString("updated_at", "")))
                 }
             } catch (e: Exception) {
@@ -448,7 +445,7 @@ class MainActivity : AppCompatActivity() {
                 pushing = false
                 if (pushAgain) {
                     pushAgain = false
-                    doPush()
+                    handler.post { doPush() }
                 }
             }
         }
@@ -522,20 +519,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun copyAccount(r: Account, i: Int) {
-        val text = JSONArray().apply { r.cookies.forEach { put(it) } }.toString()
-        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("cookies", text))
+        // 列表可能被同步替换成新对象，这里按 key 找到当前真实对象再修改，避免改了旧对象
+        val live = cur().firstOrNull { Account.keyOf(it) == Account.keyOf(r) } ?: r
+
+        val text = JSONArray().apply { live.cookies.forEach { put(it) } }.toString()
+        try {
+            val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            cm.setPrimaryClip(ClipData.newPlainText("cookies", text))
+        } catch (e: Exception) {
+            // 复制失败也不影响计时
+        }
 
         val now = System.currentTimeMillis()
-        r.usedAt = now
-        r.updatedAt = now
-        r.usage.add(now)
+        live.usedAt = now
+        live.updatedAt = now
+        live.usage.add(now)
 
         render()
         saveAll()
         if (tab == TAB_SHARED) pushSoon()
 
-        setStatus("已复制 ${r.uid.ifEmpty { "#${i + 1}" }}，开始计时", true)
+        setStatus("已复制 ${live.uid.ifEmpty { "#${i + 1}" }}，开始计时", true)
         toast("已复制，开始计时 ⏱")
     }
 
