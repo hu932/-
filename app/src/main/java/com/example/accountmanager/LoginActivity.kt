@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -20,6 +21,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var passwordInput: EditText
     private lateinit var statusText: TextView
     private lateinit var serverHint: TextView
+    private lateinit var rememberCheck: CheckBox
     private lateinit var storage: Storage
 
     private val exec = Executors.newSingleThreadExecutor()
@@ -27,16 +29,26 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
 
         storage = Storage(this)
         ShareApi.baseUrl = storage.getServerUrl()
-        ShareApi.token = "" // 登录前不带 token
+
+        // 自动登录：已记住登录态则直接进主界面
+        if (storage.isLoggedIn()) {
+            ShareApi.token = storage.token()
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+        ShareApi.token = ""
+
+        setContentView(R.layout.activity_login)
 
         usernameInput = findViewById(R.id.username)
         passwordInput = findViewById(R.id.password)
         statusText = findViewById(R.id.loginStatus)
         serverHint = findViewById(R.id.serverHint)
+        rememberCheck = findViewById(R.id.rememberCheck)
 
         findViewById<TextView>(R.id.loginBtn).setOnClickListener { doAuth(false) }
         findViewById<TextView>(R.id.regBtn).setOnClickListener { doAuth(true) }
@@ -72,8 +84,12 @@ class LoginActivity : AppCompatActivity() {
                         setStatus("返回异常：未获取到 token", false)
                         return@post
                     }
-                    storage.setAuth(name, token)
                     ShareApi.token = token
+                    if (rememberCheck.isChecked) {
+                        storage.setAuth(name, token) // 记住登录：下次自动登录
+                    } else {
+                        storage.clearAuth() // 本次会话有效，退出后需重新登录
+                    }
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
                 }

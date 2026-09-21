@@ -92,8 +92,8 @@ class MainActivity : AppCompatActivity() {
 
         storage = Storage(this)
         ShareApi.baseUrl = storage.getServerUrl()
-        ShareApi.token = storage.token()
-        if (!storage.isLoggedIn()) {
+        if (ShareApi.token.isEmpty()) ShareApi.token = storage.token()
+        if (ShareApi.token.isEmpty()) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
