@@ -46,7 +46,8 @@ class AccountAdapter(
 
         if (r.usedAt != null) {
             holder.usage.visibility = View.VISIBLE
-            holder.clock.text = "(${fmtClock(r.usedAt)} 起)"
+            val used = r.usedAt
+            if (used != null) holder.clock.text = "(${fmtClock(used)} 起)"
         } else {
             holder.usage.visibility = View.GONE
         }
@@ -57,8 +58,9 @@ class AccountAdapter(
     }
 
     fun updateTimer(holder: VH, r: Account) {
-        if (r.usedAt != null) {
-            holder.timer.text = fmtDur(System.currentTimeMillis() - r.usedAt)
+        val used = r.usedAt
+        if (used != null) {
+            holder.timer.text = fmtDur(System.currentTimeMillis() - used)
         }
     }
 
